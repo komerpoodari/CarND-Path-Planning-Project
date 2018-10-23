@@ -1,5 +1,12 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+This file is updated based on the assignment submission. The section - *Reflection* contains my comments.
+
+[//]: # (Image References)
+[image1]: ./planpipe.png
+[image2]: ./wpgen.png
+[image3]: ./14milerun.png
+
    
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).
@@ -11,6 +18,69 @@ In this project your goal is to safely navigate around a virtual highway with ot
 Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
 
 The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
+
+## Reflection
+I approached the exercise based on lessons and project Q & A session to begin with. I also wanted to make the exercise less math intensive more intuitive, with pirority to safety, especially when lane changing. 
+Path Planning consists of various functional modules including *prediction, behaviour planning, and trajectory generation.* as depected in the following picture taken from Lesson section, 4-01.
+![alt text][image1]
+
+### Prediction
+The *Prediction* component takes other vehicles position, velocity and other information and estimates future position in the next frame.
+The following code located in *main.cpp:[line #350]* accomplishes this computation.
+`                a_car_s += prev_path_size * 0.02 * a_car_speed;`
+
+In the implementation the information about every other car with respect to ego car.  The relational information includes the longitudinal position (**s**), lateral position (**d**), and vehicle speed components (**vx**, **vy**). These inputs are distilled into immediate surroundings / neighborhood information of ego vehicle.  The neighborhood information is stored in *lane_info* data structure, in terms of the following in each lane.
+1. The distance estimate between the nearest vehicle in the back and ego vehicle.
+2. The speed difference between the nearest vehicle in the back and ego vehicle.
+3. The distance estimate between the nearest vehicle in the front and ego vehicle.
+4. The speed difference between the nearest vehicle in the front and ego vehicle.
+The relevant code is located in the vicinity of *main.cpp:[line #s 332 - 382].*
+This neighborhood information is the crucial decison enabler for lane switching as well as speed control.
+
+Two helper functions are used for prediction and behavior planning.
+#### get_lane()
+The function *get_lane()* return lane number by taking lateral distance (**d**) as input. This function is located in the vicinity of *main.cpp:[line #s 171 - 181]*.
+
+#### get_cost()
+This function returns cost associated with a lane change based on the relative speeds, and position estimates of the immediate vehicle in the front and in the back. This function is located in the vicinity of *main.cpp:[line #s 186 - 206]*.  
+The cost is determined by how much cushion is available for ego car to switch into an adjacent lane. If there is relatively long space in the front as well as in the back of ego vehicles and the front vehicle faster than ego vehicle and the back vehicle in the lane is moving slower than ego vehicle, then the cost of switching is lesser. 
+
+### Behavior Planning
+The intuitive logic of *get_cost()* is useful in choosing left or right lane, when the ego vehicle is in the middle lane or continue in the middle lane. When ego vehicle is in one of edge lanes, the cost can be used to decide whether switch to middle lane or stay put in the current lane.  
+The cost information is used in conjunction with the relative distance between front car and the ego vehicle in the same lane. The relevant logic is located in the vicinity of *main.cpp:[line #s 411 - 488]*. The logic also handles the smooth lane switch transition by tracking lane switch initiation and lane switch complete.
+
+Another important aspect of behavior planning is speed control and to maintain safe distance in the front. I chose the safe distance between immediate front vehicle and the ego vehicle is 50 meters. If it is less than 50 meters initiate slow down.  If there is no vehicle within next 55 meters then improve the speed if possible within the speed limit.  The relevant logic is coded in the vicinity of *main.cpp:[line #s 490 - 541]*. The logic uses step-wise speed changes within the constraints of acceleration, jerk and speed limits.
+
+### Trajectory Generation
+We got help from project Q & A session on this section.  I followed the guidance and spline function with proposed lane and proposed speed as inputs. The guidance was very helpful in coordinate conversion from global to local and vice versa and next way point generation. The relevant logic is coded in the vicinity of *main.cpp:[line #s 544 - 644]*. 
+
+The trajectory generation logic starts with using any left-over points in the previous trajectory. If previous points are less than 2, which would be the case in the beginning the previous points are generated from car position and yaw (ref: *main.cpp [line #s 548 – 576]*).
+
+Three high level way points are generated using helper function getXY() and using map information as inputs. (ref: *main.cpp [line #s 548 – 576]*).
+
+By using proposed speed, next fine grained x-points are computed by using spline function over next x-distance as 30. Next y-points on spline are computed by feeding x-points to spline function. The math was nicely explained in Q&A session, using the following picture. These computed x-points and corresponding y-points on the spline are converted to global coordinates and fed to simulator as next-x and next-y values.
+
+(ref: *main.cpp [line #s 617 – 644]*).
+
+![alt text][image2]
+
+
+### Results
+The resulting car behavior was robust in terms of changing lanes, maintaining safe distance and behaving within the constraints of jerk and acceleration. The following snapshot is a sample run. 
+![alt text][image3]
+
+Here is the link for the corresponding video. https://youtu.be/Yq9Z0RSz1P0
+
+
+### Further Thoughts
+Further improvements are possible in the cost function are tracking acceleration and jerk in absolute values. 
+I noticed difference in acceleration calculation between my calculation and simulator calculations, when I calculated acceleration as an experiment.
+I also noticed there is considerable difference in speed proposed (e.g. 49.9 mph) and speed computed by simulator (49.7 mph)even after steady state condition is reached. 
+
+Sometimes, simulator behavior is adversarial in the sense that the fellow cars randomly jump in front of ego car, within too short distance to not to violate jerk and acceleration constraints.  Here is the video link regarding such an instance. https://youtu.be/0D_7OBvxGJc
+
+
+
 
 ## Basic Build Instructions
 
