@@ -21,19 +21,24 @@ The highway's waypoints loop around so the frenet s value, distance along the ro
 
 ## Reflection
 I approached the exercise based on lessons and project Q & A session to begin with. I also wanted to make the exercise less math intensive more intuitive, with pirority to safety, especially when lane changing. 
-Path Planning consists of various functional modules including *prediction, behaviour planning, and trajectory generation.* as depected in the following picture taken from Lesson section, 4-01.
+Path Planning consists of various functional modules including *prediction, behavior planning, and trajectory generation.* as depected in the following picture taken from Lesson section, 4-01.
+
+
 ![alt text][image1]
 
+
 ### Prediction
-The *Prediction* component takes other vehicles position, velocity and other information and estimates future position in the next frame.
+The *Prediction* component takes other fellow vehicles' position, velocity and other information and estimates future position in the next frame.
 The following code located in *main.cpp:[line #350]* accomplishes this computation.
+
 `                a_car_s += prev_path_size * 0.02 * a_car_speed;`
 
-In the implementation the information about every other car with respect to ego car.  The relational information includes the longitudinal position (**s**), lateral position (**d**), and vehicle speed components (**vx**, **vy**). These inputs are distilled into immediate surroundings / neighborhood information of ego vehicle.  The neighborhood information is stored in *lane_info* data structure, in terms of the following in each lane.
+In the implementation the information about every fellow car with respect to ego car.  The relational information includes the longitudinal position (**s**), lateral position (**d**), and vehicle speed components (**vx**, **vy**). These inputs are distilled into immediate surroundings / neighborhood information of ego vehicle.  The neighborhood information is stored in *lane_info* data structure, in terms of the following in each lane.
 1. The distance estimate between the nearest vehicle in the back and ego vehicle.
 2. The speed difference between the nearest vehicle in the back and ego vehicle.
 3. The distance estimate between the nearest vehicle in the front and ego vehicle.
 4. The speed difference between the nearest vehicle in the front and ego vehicle.
+
 The relevant code is located in the vicinity of *main.cpp:[line #s 332 - 382].*
 This neighborhood information is the crucial decison enabler for lane switching as well as speed control.
 
@@ -43,7 +48,7 @@ The function *get_lane()* return lane number by taking lateral distance (**d**) 
 
 #### get_cost()
 This function returns cost associated with a lane change based on the relative speeds, and position estimates of the immediate vehicle in the front and in the back. This function is located in the vicinity of *main.cpp:[line #s 186 - 206]*.  
-The cost is determined by how much cushion is available for ego car to switch into an adjacent lane. If there is relatively long space in the front as well as in the back of ego vehicles and the front vehicle faster than ego vehicle and the back vehicle in the lane is moving slower than ego vehicle, then the cost of switching is lesser. 
+The cost is determined by how much cushion is available for ego car to switch into an adjacent lane. If there is relatively long space in the front as well as in the back of ego vehicle and the front vehicle faster than ego vehicle and the back vehicle in the lane is moving slower than ego vehicle, then the cost of switching is lesser. 
 
 ### Behavior Planning
 The intuitive logic of *get_cost()* is useful in choosing left or right lane, when the ego vehicle is in the middle lane or continue in the middle lane. When ego vehicle is in one of edge lanes, the cost can be used to decide whether switch to middle lane or stay put in the current lane.  
@@ -66,10 +71,11 @@ By using proposed speed, next fine grained x-points are computed by using spline
 
 
 ### Results
-The resulting car behavior was robust in terms of changing lanes, maintaining safe distance and behaving within the constraints of jerk and acceleration. The following snapshot is a sample run. 
+The resulting car behavior was robust in terms of changing lanes, maintaining safe distance and behaving within the constraints of jerk and acceleration. The following snapshot is taken from a sample run.
+ 
 ![alt text][image3]
 
-Here is the link for the corresponding video. https://youtu.be/Yq9Z0RSz1P0
+**Here is the link for the corresponding video. https://youtu.be/Yq9Z0RSz1P0 **
 
 
 ### Further Thoughts
